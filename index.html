@@ -29,14 +29,12 @@
     body {
       font-family: 'TT Norms Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-weight: 400;
-      background: #F3F4F6;
       color: #161E2A;
       min-height: 100vh;
     }
 
     /* ─── Section ────────────────────────────────────────────── */
     .testimonials {
-      background: #ffffff;
       padding: 90px 24px 100px;
       overflow: hidden;
     }
@@ -58,9 +56,7 @@
       margin-bottom: 18px;
     }
 
-    .testimonials__header h2 .accent {
-      color: #25cadc;
-    }
+    .testimonials__header h2 .accent { color: #25cadc; }
 
     .testimonials__header p {
       font-family: 'TT Norms Pro', sans-serif;
@@ -78,39 +74,85 @@
     }
 
     /*
-      Stage: position: relative container.
-      All cards are position:absolute, centred at left:50% top:50%.
-      CSS transitions animate everything smoothly.
+      All cards: position:absolute, anchored at left:50% top:50%.
+      Stage height accounts for video (315px) + info label (~68px) = ~383px
+      + breathing room = 450px.
     */
     .carousel__stage {
       position: relative;
-      /* height accommodates the active card (315px) + vertical breathing room */
-      height: 380px;
-      /* allow side cards to bleed outside */
+      height: 450px;
       overflow: visible;
     }
 
-    /* ─── Individual card ────────────────────────────────────── */
+    /* ─── Card outer wrapper ─────────────────────────────────── */
+    /*
+      overflow:visible so the info text below the video is not clipped.
+      Transitions animate the whole unit (video + label).
+    */
     .carousel__card {
       position: absolute;
-      /* anchor point = top-left, then translate to centre */
       top: 50%;
       left: 50%;
-      /* base size; scale() changes visual size without reflow */
       width: 560px;
+      /* total height: video (315) + gap (20) + label (68) = 403 */
+      cursor: pointer;
+      overflow: visible;
+
+      transition:
+        transform  0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity    0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        filter     0.65s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform, opacity;
+    }
+
+    /* ─── Video box (clipped) ────────────────────────────────── */
+    .carousel__card__video {
+      width: 100%;
       height: 315px;
       border-radius: 18px;
       overflow: hidden;
       background: #161E2A;
-      cursor: pointer;
+      position: relative;
+      transition: box-shadow 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-      /* All animated props */
-      transition:
-        transform   0.65s cubic-bezier(0.4, 0, 0.2, 1),
-        opacity     0.65s cubic-bezier(0.4, 0, 0.2, 1),
-        box-shadow  0.65s cubic-bezier(0.4, 0, 0.2, 1),
-        filter      0.65s cubic-bezier(0.4, 0, 0.2, 1);
-      will-change: transform, opacity;
+    .carousel__card__video iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* Overlay: stops side-card iframes eating clicks */
+    .carousel__card__overlay {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* ─── Per-card info label ────────────────────────────────── */
+    .carousel__card__info {
+      text-align: center;
+      padding-top: 20px;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.4s ease 0.15s, transform 0.4s ease 0.15s;
+      pointer-events: none;
+    }
+
+    .carousel__card__info .info-name {
+      font-family: 'TT Norms Pro', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      color: #161E2A;
+      margin-bottom: 4px;
+    }
+
+    .carousel__card__info .info-role {
+      font-family: 'TT Norms Pro', sans-serif;
+      font-weight: 400;
+      font-size: 15px;
+      color: #25cadc;
+      letter-spacing: 0.2px;
     }
 
     /*
@@ -118,7 +160,10 @@
         active half-width  = 560/2 = 280 px
         side visual width  = 560 × 0.70 = 392 px → half = 196 px
         gap between cards  = 28 px
-        total offset       = 280 + 196 + 28 = 504 px
+        total X offset     = 280 + 196 + 28 = 504 px
+
+      Vertical: cards anchor at top:50%, translate(-50%, -50%)
+      so the card center is at stage center. Stage is 450px tall.
     */
 
     /* Centre (active) */
@@ -127,11 +172,19 @@
       opacity: 1;
       z-index: 3;
       filter: brightness(1);
+      cursor: default;
+    }
+    .carousel__card--active .carousel__card__video {
       box-shadow:
         0 0 0 2.5px #25cadc,
         0 0 40px rgba(37, 202, 220, 0.22),
         0 24px 64px rgba(0, 0, 0, 0.13);
-      cursor: default;
+    }
+    .carousel__card--active .carousel__card__overlay { display: none; }
+    .carousel__card--active .carousel__card__info {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
     }
 
     /* Left (prev) */
@@ -140,6 +193,8 @@
       opacity: 0.72;
       z-index: 2;
       filter: brightness(0.65) saturate(0.75);
+    }
+    .carousel__card--prev .carousel__card__video {
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
     }
 
@@ -149,6 +204,8 @@
       opacity: 0.72;
       z-index: 2;
       filter: brightness(0.65) saturate(0.75);
+    }
+    .carousel__card--next .carousel__card__video {
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
     }
 
@@ -170,56 +227,13 @@
       filter: brightness(0.4);
     }
 
-    /* iframe fills card */
-    .carousel__card iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-    }
-
-    /* Overlay prevents side-card iframes from eating clicks */
-    .carousel__card__overlay {
-      position: absolute;
-      inset: 0;
-      background: transparent;
-    }
-    .carousel__card--active .carousel__card__overlay {
-      display: none;
-    }
-
-    /* ─── Info (name / role) ─────────────────────────────────── */
-    .carousel__info {
-      text-align: center;
-      padding-top: 36px;
-      min-height: 76px;
-    }
-
-    .carousel__info__name {
-      font-family: 'TT Norms Pro', sans-serif;
-      font-weight: 700;
-      font-size: 21px;
-      color: #161E2A;
-      margin-bottom: 5px;
-      transition: opacity 0.35s ease;
-    }
-
-    .carousel__info__role {
-      font-family: 'TT Norms Pro', sans-serif;
-      font-weight: 400;
-      font-size: 15px;
-      color: #25cadc;
-      letter-spacing: 0.2px;
-      transition: opacity 0.35s ease;
-    }
-
     /* ─── Navigation ─────────────────────────────────────────── */
     .carousel__nav {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 22px;
-      margin-top: 38px;
+      margin-top: 42px;
     }
 
     .carousel__btn {
@@ -227,14 +241,15 @@
       height: 50px;
       border-radius: 50%;
       border: 2px solid #25cadc;
-      background: #ffffff;
+      background: transparent;
       color: #25cadc;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+      transition: background 0.25s ease, color 0.25s ease,
+                  transform 0.25s ease, box-shadow 0.25s ease;
     }
 
     .carousel__btn:hover {
@@ -244,15 +259,19 @@
       box-shadow: 0 6px 20px rgba(37, 202, 220, 0.38);
     }
 
-    .carousel__btn:active {
-      transform: scale(0.97);
-    }
+    .carousel__btn:active { transform: scale(0.97); }
 
+    /* Stroke-based SVG chevrons — reliable across all browsers */
     .carousel__btn svg {
-      width: 22px;
-      height: 22px;
-      fill: currentColor;
+      width: 20px;
+      height: 20px;
       display: block;
+      flex-shrink: 0;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     /* Dots */
@@ -290,54 +309,47 @@
         margin-bottom: 44px;
       }
 
-      /* Stack into normal flow on mobile */
       .carousel__stage {
         height: auto;
         overflow: visible;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
       }
 
-      /* All cards: reset absolute positioning */
+      /* Reset absolute positioning, hide all cards */
       .carousel__card {
         position: relative;
         top: auto;
         left: auto;
-        /* Override all transform states */
         transform: none !important;
         display: none;
         opacity: 1 !important;
         filter: none !important;
-        box-shadow: 0 0 0 2.5px #25cadc, 0 12px 40px rgba(37, 202, 220, 0.18) !important;
+        width: min(480px, 92vw);
       }
 
       .carousel__card--active {
         display: block;
-        width: min(480px, 92vw);
-        height: calc(min(480px, 92vw) * (9/16));
-        border-radius: 14px;
       }
 
-      .carousel__card--active .carousel__card__overlay {
-        display: none;
+      .carousel__card--active .carousel__card__video {
+        height: calc(min(480px, 92vw) * (9/16));
+        border-radius: 14px;
+        box-shadow: 0 0 0 2.5px #25cadc, 0 12px 40px rgba(37, 202, 220, 0.18) !important;
+      }
+
+      /* Info is always visible on mobile (only active shown anyway) */
+      .carousel__card--active .carousel__card__info {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
 
     @media (max-width: 480px) {
-      .testimonials__header h2 {
-        font-size: clamp(26px, 8vw, 34px);
-      }
-      .testimonials__header p {
-        font-size: 16px;
-      }
-      .carousel__btn {
-        width: 44px;
-        height: 44px;
-      }
-      .carousel__info__name {
-        font-size: 18px;
-      }
+      .testimonials__header h2 { font-size: clamp(26px, 8vw, 34px); }
+      .testimonials__header p  { font-size: 16px; }
+      .carousel__btn { width: 44px; height: 44px; }
     }
   </style>
 </head>
@@ -356,25 +368,21 @@
 
     <div class="carousel__stage" id="stage"></div>
 
-    <!-- Name / role display -->
-    <div class="carousel__info">
-      <div class="carousel__info__name" id="infoName"></div>
-      <div class="carousel__info__role" id="infoRole"></div>
-    </div>
-
     <!-- Prev / dots / next -->
     <div class="carousel__nav">
       <button class="carousel__btn" id="prevBtn" aria-label="Previous slide">
+        <!-- Left chevron (stroke-based) -->
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
+          <polyline points="15 18 9 12 15 6"/>
         </svg>
       </button>
 
       <div class="carousel__dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
 
       <button class="carousel__btn" id="nextBtn" aria-label="Next slide">
+        <!-- Right chevron (stroke-based) -->
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/>
+          <polyline points="9 18 15 12 9 6"/>
         </svg>
       </button>
     </div>
@@ -386,55 +394,35 @@
 <script>
   /*
    * ─── Testimonial data ─────────────────────────────────────────
-   * Replace `videoId` values with your actual YouTube video IDs.
-   * Each entry can also use a Vimeo embed URL or any iframe src.
+   * Replace `videoId` with your actual YouTube video IDs.
    */
   const SLIDES = [
-    {
-      videoId: 'dQw4w9WgXcQ',   // ← replace with your YouTube video ID
-      name:    'Sarah Johnson',
-      role:    'CEO, TechCorp',
-    },
-    {
-      videoId: 'jNQXAC9IVRw',   // ← replace with your YouTube video ID
-      name:    'Michael Chen',
-      role:    'Founder, StartupXYZ',
-    },
-    {
-      videoId: 'M7lc1UVf-VE',   // ← replace with your YouTube video ID
-      name:    'Emily Rodriguez',
-      role:    'Marketing Director, BrandCo',
-    },
-    {
-      videoId: 'ScMzIvxBSi4',   // ← replace with your YouTube video ID
-      name:    'David Kim',
-      role:    'VP Product, InnovateTech',
-    },
-    {
-      videoId: 'kJQP7kiw5Fk',   // ← replace with your YouTube video ID
-      name:    'Amanda Foster',
-      role:    'COO, ScaleUp Inc.',
-    },
+    { videoId: 'dQw4w9WgXcQ', name: 'Sarah Johnson',   role: 'CEO, TechCorp'              },
+    { videoId: 'jNQXAC9IVRw', name: 'Michael Chen',     role: 'Founder, StartupXYZ'        },
+    { videoId: 'M7lc1UVf-VE', name: 'Emily Rodriguez',  role: 'Marketing Director, BrandCo'},
+    { videoId: 'ScMzIvxBSi4', name: 'David Kim',        role: 'VP Product, InnovateTech'   },
+    { videoId: 'kJQP7kiw5Fk', name: 'Amanda Foster',    role: 'COO, ScaleUp Inc.'          },
   ];
 
-  /* ─── State ───────────────────────────────────────────────────── */
   const N       = SLIDES.length;
   let   current = 0;
 
   const stage   = document.getElementById('stage');
   const dotsEl  = document.getElementById('dots');
-  const nameEl  = document.getElementById('infoName');
-  const roleEl  = document.getElementById('infoRole');
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
 
-  /* ─── Build DOM once ──────────────────────────────────────────── */
+  /* ─── Build all cards once ────────────────────────────────────── */
   const cards = SLIDES.map((slide, i) => {
+    /* Outer card */
     const card = document.createElement('div');
     card.className = 'carousel__card';
     card.dataset.idx = i;
 
-    /* YouTube embed — autoplay disabled; enablejsapi for future pause API */
+    /* Video box */
+    const videoBox = document.createElement('div');
+    videoBox.className = 'carousel__card__video';
+
     const iframe = document.createElement('iframe');
     iframe.src = `https://www.youtube.com/embed/${slide.videoId}?enablejsapi=1&rel=0&modestbranding=1`;
     iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
@@ -442,14 +430,24 @@
     iframe.loading = 'lazy';
     iframe.title = `Testimonial from ${slide.name}`;
 
-    /* Overlay: blocks iframe pointer events on non-active cards */
     const overlay = document.createElement('div');
     overlay.className = 'carousel__card__overlay';
 
-    card.appendChild(iframe);
-    card.appendChild(overlay);
+    videoBox.appendChild(iframe);
+    videoBox.appendChild(overlay);
 
-    /* Click on a side card → navigate to it */
+    /* Info label (shown only when active via CSS) */
+    const info = document.createElement('div');
+    info.className = 'carousel__card__info';
+    info.innerHTML = `
+      <p class="info-name">${slide.name}</p>
+      <p class="info-role">${slide.role}</p>
+    `;
+
+    card.appendChild(videoBox);
+    card.appendChild(info);
+
+    /* Click side card → navigate to it */
     card.addEventListener('click', () => {
       if (Number(card.dataset.idx) !== current) goTo(Number(card.dataset.idx));
     });
@@ -458,7 +456,7 @@
     return card;
   });
 
-  /* ─── Build dots ──────────────────────────────────────────────── */
+  /* ─── Dots ────────────────────────────────────────────────────── */
   const dots = SLIDES.map((_, i) => {
     const dot = document.createElement('button');
     dot.className = 'carousel__dot';
@@ -469,83 +467,48 @@
     return dot;
   });
 
-  /* ─── Helper: modulo that handles negatives ───────────────────── */
   const mod = (n, m) => ((n % m) + m) % m;
 
-  /* ─── Update visual state ─────────────────────────────────────── */
+  /* ─── Render ──────────────────────────────────────────────────── */
   function render() {
     const prev = mod(current - 1, N);
     const next = mod(current + 1, N);
 
     cards.forEach((card, i) => {
       const diff = mod(i - current, N);
+      card.className = 'carousel__card';
 
-      card.className = 'carousel__card'; // reset
-
-      if (i === current) {
-        card.classList.add('carousel__card--active');
-      } else if (i === prev) {
-        card.classList.add('carousel__card--prev');
-      } else if (i === next) {
-        card.classList.add('carousel__card--next');
-      } else {
-        /* hidden: place on the nearest side so the transition goes the right way */
-        card.classList.add(diff < N / 2 ? 'carousel__card--hidden-right' : 'carousel__card--hidden-left');
-      }
+      if      (i === current) card.classList.add('carousel__card--active');
+      else if (i === prev)    card.classList.add('carousel__card--prev');
+      else if (i === next)    card.classList.add('carousel__card--next');
+      else card.classList.add(
+        diff < N / 2 ? 'carousel__card--hidden-right' : 'carousel__card--hidden-left'
+      );
     });
 
-    /* Fade info text out then in */
-    nameEl.style.opacity = '0';
-    roleEl.style.opacity = '0';
-    setTimeout(() => {
-      nameEl.textContent = SLIDES[current].name;
-      roleEl.textContent = SLIDES[current].role;
-      nameEl.style.opacity = '1';
-      roleEl.style.opacity = '1';
-    }, 220);
-
-    /* Dots */
     dots.forEach((d, i) => {
       d.classList.toggle('carousel__dot--active', i === current);
-      d.setAttribute('aria-selected', i === current);
+      d.setAttribute('aria-selected', String(i === current));
     });
   }
 
-  /* ─── Navigate ────────────────────────────────────────────────── */
-  function goTo(idx) {
-    current = mod(idx, N);
-    render();
-  }
+  function goTo(idx) { current = mod(idx, N); render(); }
 
-  /* ─── Controls ────────────────────────────────────────────────── */
   prevBtn.addEventListener('click', () => goTo(current - 1));
   nextBtn.addEventListener('click', () => goTo(current + 1));
 
-  /* ─── Keyboard ────────────────────────────────────────────────── */
   document.addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft')  goTo(current - 1);
     if (e.key === 'ArrowRight') goTo(current + 1);
   });
 
-  /* ─── Touch / swipe ───────────────────────────────────────────── */
   let touchX = 0;
-  stage.addEventListener('touchstart', e => {
-    touchX = e.touches[0].clientX;
-  }, { passive: true });
-  stage.addEventListener('touchend', e => {
+  stage.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend',   e => {
     const dx = e.changedTouches[0].clientX - touchX;
     if (Math.abs(dx) > 48) dx < 0 ? goTo(current + 1) : goTo(current - 1);
   }, { passive: true });
 
-  /* ─── Auto-advance (optional — uncomment to enable) ─────────────
-  let autoTimer = setInterval(() => goTo(current + 1), 6000);
-  document.getElementById('carousel').addEventListener('mouseenter', () => clearInterval(autoTimer));
-  document.getElementById('carousel').addEventListener('mouseleave', () => {
-    autoTimer = setInterval(() => goTo(current + 1), 6000);
-  });
-  ─────────────────────────────────────────────────────────────── */
-
-  /* ─── Init ────────────────────────────────────────────────────── */
   render();
 </script>
 
